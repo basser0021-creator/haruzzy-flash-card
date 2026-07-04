@@ -5,9 +5,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HARUZZY FLASH CARD</title>
-<link rel="icon" href="HARUZZY_ICON_1024.png?v=20260704C">
-<link rel="apple-touch-icon" href="HARUZZY_ICON_1024.png?v=20260704C">
-<link rel="apple-touch-icon" sizes="180x180" href="HARUZZY_ICON_1024.png?v=20260704C">
+<link rel="icon" href="HARUZZY_ICON_1024.png?v=20260704D">
+<link rel="apple-touch-icon" href="HARUZZY_ICON_1024.png?v=20260704D">
+<link rel="apple-touch-icon" sizes="180x180" href="HARUZZY_ICON_1024.png?v=20260704D">
 <meta name="apple-mobile-web-app-title" content="HARUZZY">
 <meta name="theme-color" content="#061326">
 <style>
@@ -86,6 +86,40 @@ function fanfare(){
     });
   }catch(e){}
 }
+
+function playTone(freq, type, startDelay, duration, volume){
+  try{
+    const ctx = window.__haruzzyAudioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    window.__haruzzyAudioCtx = ctx;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    o.connect(g);
+    g.connect(ctx.destination);
+    const t = ctx.currentTime + startDelay;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(volume, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+    o.start(t);
+    o.stop(t + duration + 0.02);
+  }catch(e){}
+}
+
+function playClick(){
+  playTone(920, "square", 0, 0.055, 0.13);
+  playTone(1220, "triangle", 0.045, 0.06, 0.08);
+}
+
+function playCorrect(){
+  playTone(880, "triangle", 0, 0.11, 0.16);
+  playTone(1320, "triangle", 0.09, 0.14, 0.15);
+}
+
+function playWrong(){
+  playTone(300, "sawtooth", 0, 0.12, 0.12);
+  playTone(180, "sawtooth", 0.10, 0.14, 0.11);
+}
 function menu(){
   let btns="";
   for(let s=1;s<=1700;s+=100){
@@ -125,6 +159,7 @@ function showQuestion(){
   </div>`;
 }
 function showAnswer(){
+  playClick();
   showingAnswer=true;
   const c=cards[index], a=mode==="EN_TO_JA"?c.meaning:c.word;
   root.className="app";
@@ -139,7 +174,17 @@ function showAnswer(){
     <div class="hint">採点すると次の問題へ進みます</div>
   </div>`;
 }
-function mark(ok){ if(ok) correct++; else wrong.push(cards[index]); index++; showQuestion(); }
+function mark(ok){
+  if(ok){
+    playCorrect();
+    correct++;
+  }else{
+    playWrong();
+    wrong.push(cards[index]);
+  }
+  index++;
+  setTimeout(showQuestion, 120);
+}
 function showWin(){
   root.className="win";
   root.innerHTML=`<div class="confetti"></div><div class="winBox">
