@@ -138,9 +138,25 @@ function showAnswer(){
 }
 function mark(ok){
   if(index>=cards.length)return;
-  if(ok){playCorrect();correct++}else{playWrong();wrong.push(cards[index])}
+
+  if(ok){
+    correct++;
+    playCorrect();
+  }else{
+    wrong.push(cards[index]);
+    playWrong();
+  }
+
   index++;
-  setTimeout(()=>{ if(index>=cards.length) showResult(); else showQuestion(); },120);
+
+  if(index>=cards.length){
+    showResult();
+    return;
+  }
+
+  setTimeout(function(){
+    showQuestion();
+  },120);
 }
 function showBreak(n){
   breakShown[n]=true; const last=n===90; playBreak(last);
@@ -178,11 +194,22 @@ function showResult(){
   </div>`;
 }
 
+let tapLock=false;
 function handleAction(e){
   const btn=e.target.closest&&e.target.closest("button[data-action]");
   if(!btn)return;
-  e.preventDefault(); e.stopPropagation();
+
+  e.preventDefault();
+  e.stopPropagation();
+
   const a=btn.dataset.action;
+
+  if(tapLock && (a==="ok" || a==="ng" || a==="answer")) return;
+  if(a==="ok" || a==="ng" || a==="answer"){
+    tapLock=true;
+    setTimeout(function(){tapLock=false;},350);
+  }
+
   if(a==="mode")changeMode(btn.dataset.mode);
   else if(a==="vol")selectVol(Number(btn.dataset.s),Number(btn.dataset.e));
   else if(a==="start")startGame();
