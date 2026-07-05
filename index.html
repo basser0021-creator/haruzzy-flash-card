@@ -288,5 +288,40 @@ menu();
 })();
 </script>
 
+
+<!-- HARUZZY_IPHONE_RESULT_BUTTON_FIX_20260705 -->
+<script>
+(function(){
+  function handleButtons(e){
+    var btn = e.target && e.target.closest ? e.target.closest("button") : null;
+    if(!btn) return;
+    var text = (btn.textContent || "").trim();
+
+    if(text.indexOf("TRY AGAIN") >= 0 && typeof startTryAgain === "function"){
+      e.preventDefault(); e.stopPropagation(); startTryAgain(); return;
+    }
+    if(text.indexOf("同じVol") >= 0 && typeof startGame === "function"){
+      e.preventDefault(); e.stopPropagation(); startGame(); return;
+    }
+    if(text.indexOf("トップに戻る") >= 0 && typeof menu === "function"){
+      e.preventDefault(); e.stopPropagation(); menu(); return;
+    }
+    if(text.indexOf("○ わかった") >= 0 && typeof mark === "function"){
+      e.preventDefault(); e.stopPropagation(); mark(true); return;
+    }
+    if(text.indexOf("× わからなかった") >= 0 && typeof mark === "function"){
+      e.preventDefault(); e.stopPropagation(); mark(false); return;
+    }
+    if(text === "NEXT" && typeof showQuestion === "function"){
+      e.preventDefault(); e.stopPropagation();
+      if(typeof playClick === "function") playClick();
+      showQuestion(); return;
+    }
+  }
+  document.addEventListener("touchend", handleButtons, {passive:false});
+  document.addEventListener("click", handleButtons, true);
+})();
+</script>
+
 </body>
 </html>
