@@ -23,6 +23,20 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-
 .sectionGrid{display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:10px;width:min(780px,96vw);max-height:45vh;overflow:auto;margin:12px auto;padding:4px}
 .secBtn{border:1px solid rgba(255,210,26,.35);border-radius:12px;background:rgba(255,255,255,.09);color:#fff;padding:12px 6px;font-size:15px;font-weight:850}
 .secBtn.selected{background:#ffd21a;color:#061326;border-color:#ffd21a}
+.secBtn.done{background:#FFD21A;color:#061326;border-color:#FFD21A}
+.secBtn.master{background:#FFD21A;color:#061326;border-color:#FFD21A;box-shadow:0 0 16px rgba(255,210,26,.55)}
+.secBtn.grand{background:#FFD21A;color:#061326;border-color:#FFD21A;box-shadow:0 0 22px rgba(255,210,26,.85), inset 0 0 0 2px #fff}
+.progressBox{margin:12px auto 0;color:#dbe4ef;font-size:15px;font-weight:900}
+.resetBtn{border:1px solid rgba(255,255,255,.25);background:#1f2937;color:#fff;border-radius:14px;padding:10px 14px;font-size:13px;font-weight:900;margin-top:8px}
+.win{min-height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;background:radial-gradient(circle at center,#1d2b45 0%,#061326 55%,#020814 100%);overflow:hidden;position:relative}
+.confetti{position:absolute;inset:0;background-image:radial-gradient(#ffd21a 2px,transparent 3px),radial-gradient(#fff 1px,transparent 2px);background-size:42px 42px,65px 65px;animation:spark 1.2s linear infinite;opacity:.9}
+@keyframes spark{from{transform:translateY(-20px)}to{transform:translateY(20px)}}
+.winBox{position:relative;z-index:2;width:min(980px,96vw)}
+.perfect{color:#ffd21a;font-size:clamp(28px,6vw,58px);font-weight:1000}
+.nowwin{color:#ffd21a;font-size:clamp(72px,18vw,160px);font-weight:1000;line-height:.9;text-shadow:0 5px 0 #9a6500,0 0 32px rgba(255,210,26,.7)}
+.ribbon{display:inline-block;background:#ffd21a;color:#061326;border-radius:999px;padding:10px 24px;font-size:clamp(18px,4vw,34px);font-weight:1000;margin:18px 0}
+.winScore{border:2px solid #ffd21a;border-radius:22px;padding:18px;margin:14px auto;width:min(520px,90vw);box-shadow:0 0 22px rgba(255,210,26,.45)}
+.big100{font-size:clamp(70px,16vw,132px);font-weight:1000;color:#ffd21a}
 .startBtn,.bigAction,.breakNext{border:0;border-radius:24px;background:#ffd21a;color:#061326;padding:18px 50px;font-size:clamp(30px,7vw,56px);font-weight:1000;margin-top:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
 .topbar{position:fixed;top:12px;left:16px;right:16px;display:flex;justify-content:space-between;font-size:16px;font-weight:900;z-index:5}
 .vol{color:#ffd21a} .count{color:#fff}
@@ -51,6 +65,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-
 .score{text-align:center;font-size:52px;font-weight:1000;margin:10px}
 .miss{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.14)}
 </style>
+<!-- HARUZZY_VER_4_1_STANDARD_COMPLETE -->
 </head>
 <body>
 <div id="root" class="app">読み込み中...</div>
@@ -67,6 +82,59 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 function jsq(s){return JSON.stringify(String(s))}
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function volName(){return "vol."+pad(selectedStart)+"-"+pad(selectedEnd)}
+function volKeyFor(s,e){return selectedMode+"_"+pad(s)+"_"+pad(e)}
+function volKey(){return volKeyFor(selectedStart,selectedEnd)}
+function loadStats(){try{return JSON.parse(localStorage.getItem("HARUZZY_STATS_V4")||"{}")}catch(e){return {}}}
+function saveStats(s){localStorage.setItem("HARUZZY_STATS_V4",JSON.stringify(s))}
+function getStats(key){const s=loadStats();return s[key]||{perfects:0,attempts:0}}
+function markComplete(){
+  if(isTryAgain)return;
+  const key=volKey();
+  const all=loadStats();
+  const st=all[key]||{perfects:0,attempts:0};
+  st.attempts=(st.attempts||0)+1;
+  st.perfects=(st.perfects||0)+1;
+  all[key]=st;
+  saveStats(all);
+}
+function resetData(){
+  if(confirm("HARUZZYの学習データをリセットしますか？")){
+    localStorage.removeItem("HARUZZY_STATS_V4");
+    menu();
+  }
+}
+function statusClass(st){
+  if((st.perfects||0)>=3)return " grand";
+  if((st.perfects||0)>=2)return " master";
+  if((st.perfects||0)>=1)return " done";
+  return "";
+}
+function statusLabel(st){
+  if((st.perfects||0)>=3)return " 👑";
+  if((st.perfects||0)>=2)return " ⭐";
+  if((st.perfects||0)>=1)return " ✅";
+  return "";
+}
+function progressOne(modeName){
+  const step=modeName==="standard"?100:20;
+  const total=Math.ceil(1700/step);
+  const s=loadStats();
+  let done=0, master=0, grand=0;
+  for(let start=1;start<=1700;start+=step){
+    const end=Math.min(start+step-1,1700);
+    const st=s[modeName+"_"+pad(start)+"_"+pad(end)]||{perfects:0};
+    if((st.perfects||0)>=1)done++;
+    if((st.perfects||0)>=2)master++;
+    if((st.perfects||0)>=3)grand++;
+  }
+  const pct=Math.round(done/total*100);
+  return {done,total,pct,master,grand};
+}
+function progressSummary(){
+  const q=progressOne("quick");
+  const st=progressOne("standard");
+  return `⚡ QUICK　${q.done}/${q.total} Vol　${q.pct}%　⭐${q.master}　👑${q.grand}<br>📚 STANDARD　${st.done}/${st.total} Vol　${st.pct}%　⭐${st.master}　👑${st.grand}`;
+}
 function speak(text){if(!("speechSynthesis" in window))return;speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=.82;speechSynthesis.speak(u)}
 function tone(f,type,dur,vol,delay=0){try{let c=window.__ctx||new(window.AudioContext||window.webkitAudioContext)();window.__ctx=c;let o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=f;o.connect(g);g.connect(c.destination);let t=c.currentTime+delay;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.start(t);o.stop(t+dur+.03)}catch(e){}}
 function playClick(){tone(920,"square",.055,.13);tone(1220,"triangle",.06,.08,.045)}
@@ -79,8 +147,9 @@ function menu(){
   let buttons="";
   for(let s=1;s<=1700;s+=step){
     let e=Math.min(s+step-1,1700);
-    let cls=s===selectedStart?"secBtn selected":"secBtn";
-    buttons += `<button class="${cls}" data-action="vol" data-s="${s}" data-e="${e}">vol.${pad(s)}-${pad(e)}</button>`;
+    let st=getStats(selectedMode+"_"+pad(s)+"_"+pad(e));
+    let cls=(s===selectedStart?"secBtn selected":"secBtn")+statusClass(st);
+    buttons += `<button class="${cls}" data-action="vol" data-s="${s}" data-e="${e}">vol.${pad(s)}-${pad(e)}${statusLabel(st)}</button>`;
   }
   root.className="app";
   root.innerHTML=`<div>
@@ -92,6 +161,9 @@ function menu(){
     </div>
     <div class="sectionGrid">${buttons}</div>
     <button class="startBtn" data-action="start">START</button>
+    <div class="progressBox">${progressSummary()}</div>
+    <div class="small">✅ COMPLETE / ⭐ MASTER / 👑 GRAND MASTER（QUICK・STANDARD別管理）</div>
+    <button class="resetBtn" data-action="reset">RESET DATA</button>
     <div class="small">選択中：${volName()} / 毎回ランダム出題</div>
   </div>`;
 }
@@ -175,9 +247,28 @@ function showBreak(n){
     <button class="breakNext" data-action="next">NEXT</button>
   </div>`;
 }
+function showWin(){
+  markComplete();
+  root.className="win";
+  root.innerHTML=`<div class="confetti"></div><div class="winBox">
+    <div class="perfect">★★★ PERFECT SCORE! ★★★</div>
+    <div class="nowwin">NOW WIN!</div>
+    <div class="ribbon">You did it! ${cards.length} out of ${cards.length}!</div>
+    <div class="winScore"><span class="big100">${cards.length}</span> / ${cards.length}<br><b>正答率 100%</b></div>
+    <div class="small">このVolをCOMPLETEに記録しました</div>
+    <div class="judge">
+      <button class="startBtn" style="font-size:26px;padding:15px 30px" data-action="restart">同じVolをもう一度</button>
+      <button class="menuBtn" data-action="menu">トップに戻る</button>
+    </div>
+  </div>`;
+}
 function showResult(){
   missedSource=[...wrong];
   const total=cards.length, rate=total?Math.round(correct/total*100):0;
+  if(correct===total && total>0 && !isTryAgain){
+    showWin();
+    return;
+  }
   let miss=wrong.length?wrong.map(c=>`<div class="miss">${c.no}　<b>${esc(c.word)}</b>　${esc(c.meaning)} <button data-action="speakword" data-word="${esc(c.word)}" style="border:0;border-radius:8px;background:#ffd21a;padding:4px 8px">🔊</button></div>`).join(""):`<div class="miss">間違いなし。完璧。</div>`;
   root.className="app";
   root.innerHTML=`<div class="result">
@@ -222,6 +313,7 @@ function handleAction(e){
   else if(a==="try")startTryAgain();
   else if(a==="restart")startGame();
   else if(a==="menu")menu();
+  else if(a==="reset")resetData();
 }
 document.addEventListener("click",handleAction,true);
 document.addEventListener("touchend",handleAction,{passive:false,capture:true});
