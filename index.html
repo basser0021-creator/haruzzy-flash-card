@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -227,5 +228,23 @@ document.addEventListener("keydown",e=>{
 });
 menu();
 </script>
+
+<!-- HARUZZY_RECOVERY_TOUCH_FIX_20260705 -->
+<script>
+(function(){
+  function forceAnswer(e){
+    var btn = e.target && e.target.closest ? e.target.closest('.bigAction') : null;
+    if(!btn) return;
+    if(typeof showAnswer === 'function'){
+      e.preventDefault();
+      e.stopPropagation();
+      showAnswer();
+    }
+  }
+  document.addEventListener('touchend', forceAnswer, {passive:false});
+  document.addEventListener('click', forceAnswer, true);
+})();
+</script>
+
 </body>
 </html>
