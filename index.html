@@ -153,22 +153,65 @@ function showQuestion(){
   </div>`;
 }
 function showAnswer(){
-  playClick();
   showingAnswer=true;
+
   var c=cards[index];
   var a=(mode==="EN_TO_JA") ? c.meaning : c.word;
+
   root.className="app";
-  root.innerHTML=topbar()+
-    '<div>'+
-      '<div class="badge">答え</div>'+
-      '<div class="answerText">'+esc(a)+'</div>'+
-      '<button class="speaker" type="button" onclick="speak('+jsq(c.word)+')">🔊</button>'+
-      '<div class="judge">'+
-        '<button class="ok" type="button" onclick="mark(true)">○ わかった</button>'+
-        '<button class="ng" type="button" onclick="mark(false)">× わからなかった</button>'+
-      '</div>'+
-      '<div class="hint">採点すると次の問題へ進みます</div>'+
-    '</div>';
+  root.innerHTML="";
+
+  var wrapper=document.createElement("div");
+
+  var badge=document.createElement("div");
+  badge.className="badge";
+  badge.textContent="答え";
+
+  var answer=document.createElement("div");
+  answer.className="answerText";
+  answer.textContent=a;
+
+  var speaker=document.createElement("button");
+  speaker.className="speaker";
+  speaker.type="button";
+  speaker.textContent="🔊";
+  speaker.onclick=function(){ speak(c.word); };
+
+  var judge=document.createElement("div");
+  judge.className="judge";
+
+  var okBtn=document.createElement("button");
+  okBtn.className="ok";
+  okBtn.type="button";
+  okBtn.textContent="○ わかった";
+  okBtn.onclick=function(){ mark(true); };
+
+  var ngBtn=document.createElement("button");
+  ngBtn.className="ng";
+  ngBtn.type="button";
+  ngBtn.textContent="× わからなかった";
+  ngBtn.onclick=function(){ mark(false); };
+
+  judge.appendChild(okBtn);
+  judge.appendChild(ngBtn);
+
+  var hint=document.createElement("div");
+  hint.className="hint";
+  hint.textContent="採点すると次の問題へ進みます";
+
+  wrapper.appendChild(badge);
+  wrapper.appendChild(answer);
+  wrapper.appendChild(speaker);
+  wrapper.appendChild(judge);
+  wrapper.appendChild(hint);
+
+  var bar=document.createElement("div");
+  bar.innerHTML=topbar();
+
+  root.appendChild(bar);
+  root.appendChild(wrapper);
+
+  setTimeout(function(){ playClick(); }, 30);
 }
 function mark(ok){
   if(ok){playCorrect();correct++}else{playWrong();wrong.push(cards[index])}
@@ -229,6 +272,20 @@ document.addEventListener("keydown",e=>{
   else if(showingAnswer&&(e.key.toLowerCase()==="x"||e.key==="ArrowLeft"))mark(false);
 });
 menu();
+</script>
+
+
+<!-- HARUZZY_IPHONE_DOM_FIX_20260705 -->
+<script>
+(function(){
+  function tapAnswer(e){
+    var btn=e.target && e.target.closest ? e.target.closest('.bigAction') : null;
+    if(!btn) return;
+    e.preventDefault();
+    if(typeof showAnswer==="function") showAnswer();
+  }
+  document.addEventListener("touchend", tapAnswer, {passive:false});
+})();
 </script>
 
 </body>
