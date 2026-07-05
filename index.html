@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -25,7 +26,7 @@ button{font-family:inherit;cursor:pointer}
 .sectionGrid{display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:10px;width:min(780px,96vw);max-height:45vh;overflow:auto;margin:12px auto;padding:4px}
 .secBtn{border:1px solid rgba(255,210,26,.35);border-radius:12px;background:rgba(255,255,255,.09);color:#fff;padding:12px 6px;font-size:15px;font-weight:850}
 .secBtn.selected{background:#ffd21a;color:#061326;border-color:#ffd21a}
-.startBtn,.bigAction,.breakNext{border:0;border-radius:24px;background:#ffd21a;color:#061326;padding:18px 50px;font-size:clamp(30px,7vw,56px);font-weight:1000;margin-top:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.startBtn,.bigAction,.breakNext{touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,210,26,.25);border:0;border-radius:24px;background:#ffd21a;color:#061326;padding:18px 50px;font-size:clamp(30px,7vw,56px);font-weight:1000;margin-top:16px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
 .topbar{position:fixed;top:12px;left:16px;right:16px;display:flex;justify-content:space-between;font-size:16px;font-weight:900;z-index:5}
 .vol{color:#ffd21a} .count{color:#fff}
 .card{width:min(860px,92vw);min-height:40vh;border-radius:22px;background:#eef3ec;color:#061326;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 18px;box-shadow:0 12px 38px rgba(0,0,0,.38)}
@@ -147,7 +148,7 @@ function showQuestion(){
       <div class="qword">${esc(q)}</div>
       ${mode==="EN_TO_JA"?`<button class="speaker" onclick='speak(${jsq(c.word)})'>🔊</button>`:""}
     </div>
-    <button class="bigAction" onclick="showAnswer()">答えを見る</button>
+    <button class="bigAction" type="button" data-action="answer">答えを見る</button>
     <div class="hint">PCはEnter / iPhoneは「答えを見る」</div>
   </div>`;
 }
@@ -243,6 +244,26 @@ menu();
   }
   document.addEventListener('touchend', forceAnswer, {passive:false});
   document.addEventListener('click', forceAnswer, true);
+})();
+</script>
+
+
+<!-- HARUZZY_ANSWER_BUTTON_FIX_20260705 -->
+<script>
+(function(){
+  function fireAnswer(e){
+    var target = e.target;
+    var btn = target && target.closest ? target.closest('[data-action="answer"], .bigAction') : null;
+    if(!btn) return;
+    if(typeof showAnswer === 'function'){
+      e.preventDefault();
+      e.stopPropagation();
+      showAnswer();
+    }
+  }
+  document.addEventListener('click', fireAnswer, true);
+  document.addEventListener('touchend', fireAnswer, {passive:false});
+  document.addEventListener('pointerup', fireAnswer, true);
 })();
 </script>
 
